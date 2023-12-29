@@ -1,4 +1,0 @@
-This is a file to test submodules.
-
-MODIFIED BY MASTER
-MODIFIED BY LOCAL
