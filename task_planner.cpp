@@ -16,6 +16,7 @@ int main(int argc, char **argv)
 
 	ros::NodeHandle n;
 	ros::ServiceClient service_example = n.serviceClient<ur5_lego::Vectorize>("vectorize_example");
+	service_example.waitForExistence();
 
 	ur5_lego::Vectorize srv;
 	srv.request.x = x;

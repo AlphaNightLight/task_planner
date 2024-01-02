@@ -24,6 +24,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 
 	ros::ServiceServer service = n.advertiseService("vectorize_example", vect);
+	ROS_INFO("task_server_example is ready");
 	ros::spin();
 
 	return 0;
