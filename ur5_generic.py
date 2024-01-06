@@ -217,6 +217,11 @@ class Ur5Generic(BaseControllerFixed):
             if (e_norm < 0.001):
                 self.homing_flag = False
                 print(colored("HOMING PROCEDURE ACCOMPLISHED", 'red'))
+                #----------------------------------------------------------------------------------------------- Here starts a part added by the students
+                ur5_generic_is_ready = ros.Publisher("ur5_generic_is_ready", WrenchStamped, queue_size=1)
+                # we advertise this message only to communicate that the homing procedure is over, so it's safe to command the robot from other nodes.
+                # We used WrenchStamped only because it was already imoorted.
+                #----------------------------------------------------------------------------------------------- Here ends the  part added by the students
                 if self.gripper:
                     self.controller_manager.gm.move_gripper(80)
                 break
