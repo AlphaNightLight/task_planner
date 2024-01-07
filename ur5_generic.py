@@ -158,9 +158,9 @@ class Ur5Generic(BaseControllerFixed):
             pointcloud_frame = "zed2_left_camera_optical_frame"
 
         # compute jacobian of the end effector in the base or world frame (they are aligned so in terms of velocity they are the same)
-        self.J6 = self.robot.frameJacobian(self.q, self.robot.model.getFrameId(frame_name), False, pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)                    
-        # take first 3 rows of J6 cause we have a point contact            
-        self.J = self.J6[:3,:] 
+        self.J6 = self.robot.frameJacobian(self.q, self.robot.model.getFrameId(frame_name), False, pin.ReferenceFrame.LOCAL_WORLD_ALIGNED)
+        # take first 3 rows of J6 cause we have a point contact
+        self.J = self.J6[:3,:]
 
         # broadcast base world TF
         self.broadcaster.sendTransform(self.base_offset, (0.0, 0.0, 0.0, 1.0), Time.now(), '/base_link', '/world')
@@ -330,5 +330,3 @@ if __name__ == '__main__':
         if   conf.plotting:
             p.plotStuff()
 
-    
-        

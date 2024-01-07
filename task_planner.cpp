@@ -11,15 +11,15 @@
 #include <vector>
 
 
-char info_name[] = "[task_planner]:";
-bool debug_mode = true;
+char info_name[] = "[  task_planner  ]:";
+bool debug_mode = false;
 
 
 int main(int argc, char **argv)
 {
 	/// Initialization
 
-	if(debug_mode) ROS_INFO("%s Initialization phase", info_name);
+	ROS_INFO("%s Initialization phase", info_name);
 
 	ros::init(argc, argv, "task_planner");
 	ros::NodeHandle node;
@@ -42,8 +42,14 @@ int main(int argc, char **argv)
 	ur5_lego::GetDesiredPoses get_desired_poses_service;
 	ur5_lego::MoveBlock move_block_service;
 
+	ros::param::get("/debug_mode", debug_mode);
 	ROS_INFO("%s task_planner is ready!", info_name);
 
+	ROS_INFO(" ");
+	ROS_INFO("##############################");
+	ROS_INFO("#  Here starts the workflow  #");
+	ROS_INFO("##############################");
+	ROS_INFO(" ");
 
 	/// Vision Node
 
@@ -122,7 +128,9 @@ int main(int argc, char **argv)
 				ROS_ERROR("%s Failed to call service move_block", info_name);
 				return 1;
 			}
-
+			if(!move_block_service.response.success){
+				ROS_WARN("%s motion_planner failed to move block \"%s\"", info_name, desired_block.label.c_str());
+			}
 			actual_poses.erase(it);
 		}
 	}
@@ -135,5 +143,10 @@ int main(int argc, char **argv)
 	/// End
 
 	ROS_INFO("%s task_planner is over!", info_name);
+	ROS_INFO(" ");
+	ROS_INFO("##############################");
+	ROS_INFO("#   Here ends the workflow   #");
+	ROS_INFO("##############################");
+	ROS_INFO(" ");
 	return 0;
 }

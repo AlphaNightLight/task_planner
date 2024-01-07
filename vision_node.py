@@ -6,8 +6,8 @@ from ur5_lego.srv import GetBoundingBoxes,GetBoundingBoxesRequest,GetBoundingBox
 from ur5_lego.msg import BoundingBox
 
 
-info_name = "[vision_node]:"
-debug_mode = True
+info_name = "    [  vision_node   ]:"
+debug_mode = False
 
 
 def get_bounding_boxes_handler(req):
@@ -31,5 +31,6 @@ def get_bounding_boxes_handler(req):
 if __name__ == "__main__":
   ros.init_node("vision_node")
   service = ros.Service("get_bounding_boxes", GetBoundingBoxes, get_bounding_boxes_handler)
+  debug_mode = ros.get_param("/debug_mode")
   ros.loginfo("%s vision_node is ready!", info_name)
   ros.spin()

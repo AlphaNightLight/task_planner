@@ -6,8 +6,8 @@ from ur5_lego.srv import BoundingBoxesToPoses,BoundingBoxesToPosesRequest,Boundi
 from ur5_lego.msg import BoundingBox,TargetPose
 
 
-info_name = "[pointcloud_node]:"
-debug_mode = True
+info_name = "    [pointcloud_node ]:"
+debug_mode = False
 
 
 def bounding_boxes_to_poses_handler(req):
@@ -31,5 +31,6 @@ def bounding_boxes_to_poses_handler(req):
 if __name__ == "__main__":
   ros.init_node("pointcloud_node")
   service = ros.Service("bounding_boxes_to_poses", BoundingBoxesToPoses, bounding_boxes_to_poses_handler)
+  debug_mode = ros.get_param("/debug_mode")
   ros.loginfo("%s pointcloud_node is ready!", info_name)
   ros.spin()

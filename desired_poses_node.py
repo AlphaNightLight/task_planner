@@ -10,8 +10,8 @@ from ur5_lego_modules.desired_poses_params import desired_poses
 from ur5_lego_modules.desired_poses_params import z_offset
 
 
-info_name = "[desired_poses_node]:"
-debug_mode = True
+info_name = "  [desired_poses_node]:"
+debug_mode = False
 
 
 def get_desired_poses_handler(req):
@@ -50,5 +50,6 @@ def get_desired_poses_handler(req):
 if __name__ == "__main__":
   ros.init_node("desired_poses_node")
   service = ros.Service("get_desired_poses", GetDesiredPoses, get_desired_poses_handler)
+  debug_mode = ros.get_param("/debug_mode")
   ros.loginfo("%s desired_poses_node is ready!", info_name)
   ros.spin()

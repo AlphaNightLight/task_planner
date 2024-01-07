@@ -5,15 +5,14 @@
 #include "std_msgs/Float64MultiArray.h"
 #include "sensor_msgs/JointState.h"
 
-#define JOINT_SIZE 8
 
 char info_name[] = "[robot_controller]:";
 bool debug_mode = true;
+int JOINT_SIZE = 8;
 
-
-const double MAX_ANGULAR_SPEED = 3.1415926535 / 10; // PI/10 rad/s
-const double UPDATE_RATE = 1000.0; // 1 kHz
-const double MAX_INCREMENT = MAX_ANGULAR_SPEED / UPDATE_RATE; // the upper bound for angular velocity can be directly converted in an upper bound for increments.
+double MAX_ANGULAR_SPEED = 3.1415926535 / 10; // PI/10 rad/s
+double UPDATE_RATE = 1000.0; // 1 kHz
+double MAX_INCREMENT; // the upper bound for angular velocity can be directly converted in an upper bound for increments.
 ros::Publisher joint_group_pos_controller_publisher;
 
 
@@ -102,6 +101,12 @@ int main(int argc, char **argv)
 
 	ros::ServiceServer service = node.advertiseService("move_robot", move_robot_handler);
 	joint_group_pos_controller_publisher = node.advertise<std_msgs::Float64MultiArray>("/ur5/joint_group_pos_controller/command", 1000);
+
+	ros::param::get("/debug_mode", debug_mode);
+	ros::param::get("/joint_size", JOINT_SIZE);
+	ros::param::get("/max_angular_speed", MAX_ANGULAR_SPEED);
+	ros::param::get("/update_rate", UPDATE_RATE);
+	MAX_INCREMENT = MAX_ANGULAR_SPEED / UPDATE_RATE;
 
 	ROS_INFO("%s robot_controller is ready!", info_name);
 	ros::spin();
