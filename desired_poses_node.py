@@ -7,10 +7,12 @@ from ur5_lego.msg import TargetPose
 
 from tf.transformations import quaternion_from_euler
 from ur5_lego_modules.desired_poses_params import desired_poses
+from ur5_lego_modules.desired_poses_params import x_offset
+from ur5_lego_modules.desired_poses_params import y_offset
 from ur5_lego_modules.desired_poses_params import z_offset
 
 
-info_name = "  [desired_poses_node]:"
+info_name = "[desired_poses_node]:"
 debug_mode = False
 
 
@@ -23,8 +25,8 @@ def get_desired_poses_handler(req):
     res.poses.append(TargetPose())
 
     res.poses[i].label = desired_poses[i].label
-    res.poses[i].position.x = desired_poses[i].x
-    res.poses[i].position.y = desired_poses[i].y
+    res.poses[i].position.x = desired_poses[i].x + x_offset
+    res.poses[i].position.y = desired_poses[i].y + y_offset
     res.poses[i].position.z = z_offset
 
     res.poses[i].euler.x = 0.0

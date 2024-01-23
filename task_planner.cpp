@@ -11,7 +11,7 @@
 #include <vector>
 
 
-char info_name[] = "[  task_planner  ]:";
+char info_name[] = " [  task_planner  ]:";
 bool debug_mode = false;
 
 

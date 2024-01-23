@@ -6,7 +6,7 @@ from ur5_lego.srv import BoundingBoxesToPoses,BoundingBoxesToPosesRequest,Boundi
 from ur5_lego.msg import BoundingBox,TargetPose
 
 
-info_name = "    [pointcloud_node ]:"
+info_name = "  [pointcloud_node ]:"
 debug_mode = False
 
 

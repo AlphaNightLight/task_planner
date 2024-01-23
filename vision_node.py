@@ -6,7 +6,7 @@ from ur5_lego.srv import GetBoundingBoxes,GetBoundingBoxesRequest,GetBoundingBox
 from ur5_lego.msg import BoundingBox
 
 
-info_name = "    [  vision_node   ]:"
+info_name = "  [  vision_node   ]:"
 debug_mode = False
 
 

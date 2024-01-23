@@ -7,7 +7,7 @@
 #include "std_msgs/Float64MultiArray.h"
 
 
-char info_name[] = "[ motion_planner ]:";
+char info_name[] = " [ motion_planner ]:";
 bool debug_mode = false;
 int JOINT_SIZE = 8;
 ros::ServiceClient robot_controller;

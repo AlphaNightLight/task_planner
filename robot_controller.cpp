@@ -6,7 +6,7 @@
 #include "sensor_msgs/JointState.h"
 
 
-char info_name[] = "[robot_controller]:";
+char info_name[] = " [robot_controller]:";
 bool debug_mode = true;
 int JOINT_SIZE = 8;
 
