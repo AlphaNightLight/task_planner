@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 
 	if(debug_mode) ROS_INFO("%s Motion planning phase", info_name);
 
-	/**/
+	/**
 	actual_poses.push_back(ur5_lego::TargetPose());
 	actual_poses.push_back(ur5_lego::TargetPose());
 	actual_poses.push_back(ur5_lego::TargetPose());
