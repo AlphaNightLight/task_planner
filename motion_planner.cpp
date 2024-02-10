@@ -5,6 +5,13 @@
 
 #include "ur5_lego/MoveRobot.h"
 #include "std_msgs/Float64MultiArray.h"
+#include "ur5_lego/motion_planner.h"
+#include "../motion_planner_ur5/motion_planner.h"
+#include "../motion_planner_ur5/motion_planner.cpp"
+
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Geometry>
 
 
 char info_name[] = " [ motion_planner ]:";
@@ -37,6 +44,8 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 	desired_joints[6] = 0.0;
 	desired_joints[7] = 0.0;
 
+
+
 	/* Send joints to robot*/
 	move_robot_service.request.joints.data = desired_joints;
 	service_exit = robot_controller.call(move_robot_service);
@@ -52,14 +61,39 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 	}
 	/* Sent */
 
-        desired_joints[0] = 1.57;
-        desired_joints[1] = -1.57;
-        desired_joints[2] = 1.57;
-        desired_joints[3] = 0.0;
-        desired_joints[4] = 0.0;
-        desired_joints[5] = 0.0;
+        desired_joints[0] = 1.20;
+        //desired_joints[1] = -1.57;
+		desired_joints[1] = -0.8;
+        desired_joints[2] = 1.9;
+        desired_joints[3] = -0.05;
+        desired_joints[4] = 0.1;
+        desired_joints[5] = 2.3;
         desired_joints[6] = 0.0;
         desired_joints[7] = 0.0;
+		
+		Eigen::Matrix4d directMatrix, directMatrixAdjusted;
+		Eigen::VectorXd myJointVariables(6);
+		myJointVariables << desired_joints[0],desired_joints[1],desired_joints[2],desired_joints[3],desired_joints[4],desired_joints[5];
+		directMatrix = directKin(myJointVariables);
+		directMatrixAdjusted = base_to_world() * directMatrix * adjust_gripper();
+		
+		ROS_INFO("FEDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+		std::cout << directMatrix << std::endl;
+		
+		Matrix3d directMatrixTRE = directMatrix.block<3,3>(0,0);
+		Quaterniond directMatrixQ(directMatrixTRE);
+		std::cout << directMatrixQ.coeffs() << std::endl;
+		ROS_INFO("FEDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+		std::cout << directMatrixAdjusted << std::endl;
+		
+		Matrix3d directMatrixAdjustedTRE = directMatrixAdjusted.block<3,3>(0,0);
+		Quaterniond directMatrixAdjustedQ(directMatrixAdjustedTRE);
+		//std::cout << directMatrixAdjustedQ.coeffs() << std::endl;
+		std::cout << "x " << directMatrixAdjustedQ.x() << std::endl;
+		std::cout << "y " << directMatrixAdjustedQ.y() << std::endl;
+		std::cout << "z " << directMatrixAdjustedQ.z() << std::endl;
+		std::cout << "w " << directMatrixAdjustedQ.w() << std::endl;
+		ROS_INFO("FEDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
 	/* Send joints to robot*/
         move_robot_service.request.joints.data = desired_joints;
@@ -87,6 +121,8 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "motion_planner");
 	ros::NodeHandle node;
+	
+	bool ok = almostZero(0.002);
 
 	ROS_INFO("%s Waiting for robot_controller", info_name);
 	robot_controller = node.serviceClient<ur5_lego::MoveRobot>("move_robot");

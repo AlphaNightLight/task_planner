@@ -35,8 +35,8 @@ def bounding_boxes_to_poses_handler(req):
     bb = Inputs()
     bb.xc = box.xc
     bb.yc = box.yc
-    bb.h = box.h
-    bb.w = box.w
+    bb.h = box.height
+    bb.w = box.width
     bb.ID = box.label
     input_bounding_boxes.append(bb)
 

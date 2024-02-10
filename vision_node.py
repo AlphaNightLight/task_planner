@@ -22,6 +22,7 @@ os.chdir(cwd)
 
 info_name = "  [  vision_node   ]:"
 debug_mode = False
+path_to_image = "/home/alex/ros_ws/src/ur5_lego/img/zed.jpg"
 
 
 
@@ -32,12 +33,12 @@ def get_bounding_boxes_handler(req):
   ### Detect the bounding boxes
   img_raw = ros.wait_for_message("/ur5/zed_node/left/image_rect_color", Image)
   img_cv2 = CvBridge().imgmsg_to_cv2(img_raw, 'rgb8')
+  cv2.imwrite(path_to_image, img_cv2)
 
   #plt.imshow(img_cv2)
   #plt.show()
-  #cv2.imwrite('/home/alex/ros_ws/src/ur5_lego/src/task_planner/zed.png', img_cv2)
 
-  predictions = make_prediction(img_cv2)
+  predictions = make_prediction(path_to_image)
 
   for prediction in predictions:
     bounding_box = BoundingBox()
@@ -45,7 +46,7 @@ def get_bounding_boxes_handler(req):
     bounding_box.yc = prediction.yc
     bounding_box.width = prediction.w
     bounding_box.height = prediction.h
-    bounding_box.label = prediction.ID
+    bounding_box.label = prediction.convert_num_to_id()
     res.boxes.append(bounding_box)
 
   res.dim = len(res.boxes)

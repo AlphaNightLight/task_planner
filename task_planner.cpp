@@ -99,6 +99,14 @@ int main(int argc, char **argv)
 
 	if(debug_mode) ROS_INFO("%s Motion planning phase", info_name);
 
+	actual_poses.push_back(ur5_lego::TargetPose());
+	actual_poses.at(0).label = "X1-Y1-Z2";
+	actual_poses.at(0).position.x = 0.6;
+	actual_poses.at(0).position.y = 0.6;
+	actual_poses.at(0).position.z = 0.87;
+	actual_poses.at(0).euler.x = 0;
+	actual_poses.at(0).euler.y = 0;
+	actual_poses.at(0).euler.z = 0.78;
 	/**
 	actual_poses.push_back(ur5_lego::TargetPose());
 	actual_poses.push_back(ur5_lego::TargetPose());
