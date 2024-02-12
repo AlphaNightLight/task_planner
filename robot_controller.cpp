@@ -51,7 +51,7 @@ bool move_robot_handler(ur5_lego::MoveRobot::Request &req, ur5_lego::MoveRobot::
 	}
 
 	// Note: in the following cycle, increments will be used just as a placeholder for the joint distances, because we need to temporary store them extract the max.
-	// the proper initialization of increments will be the one in the cycle after.
+	// the proper initialization of increments will be the one in the next cycle.
 	for(int i=0;i<JOINT_SIZE;++i){
 		increments.at(i) = std::abs( desired_joints.at(i) - actual_joints.at(i) );
 	}

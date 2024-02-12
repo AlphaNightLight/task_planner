@@ -14,9 +14,7 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
-#define Z_GRIP 0.15
-#define Z_APPROACH 0.10
-#define VIA_POINS_NUMBER 6
+#define Z_APPROACH 0.1
 
 
 char info_name[] = " [ motion_planner ]:";
@@ -46,40 +44,9 @@ Vector8d get_actual_joints()
 
 bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::Response &res)
 {
-	req.start_pose.position.x = 0.7;
-	req.start_pose.position.y = 0.5;
-	req.start_pose.position.z = 0.87;
-	req.start_pose.orientation.x = 0.0;
-	req.start_pose.orientation.y = 0.0;
-	req.start_pose.orientation.z = 0.7071;
-	req.start_pose.orientation.w = 0.7071;
-	
-	
-	/*req.end_pose.position.x = 0.6;
-	req.end_pose.position.y = 0.6;
-	req.end_pose.position.z = 0.87;
-	req.end_pose.orientation.x = 0.0;
-	req.end_pose.orientation.y = 0.0;
-	req.end_pose.orientation.z = 0.3827;
-	req.end_pose.orientation.w = 0.9239;*/
-	req.end_pose.position.x = 0.8;
-	req.end_pose.position.y = 0.4;
-	req.end_pose.position.z = 0.87;
-	req.end_pose.orientation.x = 0.0;
-	req.end_pose.orientation.y = 0.0;
-	req.end_pose.orientation.z = -0.3827;
-	req.end_pose.orientation.w = 0.9239;
-	
 	bool service_exit;
-	ur5_lego::MoveRobot move_robot_service;
-	
-	Vector8d actual_joints;
-	Quaterniond adjust_block_orientation;
 	std::vector<double> desired_joints(JOINT_SIZE);
-	
-	Path joint_path;
-	std::vector<Vector3d> via_points_positions(VIA_POINS_NUMBER);
-	std::vector<Quaterniond> via_points_quaternions(VIA_POINS_NUMBER);
+	ur5_lego::MoveRobot move_robot_service;
 
 	ROS_INFO("%s Moving block \"%s\"...", info_name, req.start_pose.label.c_str());
 
@@ -90,71 +57,7 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 
 
 	// Move the block
-	adjust_block_orientation.x() = 0.7071;
-	adjust_block_orientation.y() = -0.7071;
-	adjust_block_orientation.z() = 0.0;
-	adjust_block_orientation.w() = 0.0;
-	
-	via_points_positions.at(1) << req.start_pose.position.x, req.start_pose.position.y, req.start_pose.position.z + Z_GRIP;
-	via_points_quaternions.at(1).x() = req.start_pose.orientation.x;
-	via_points_quaternions.at(1).y() = req.start_pose.orientation.y;
-	via_points_quaternions.at(1).z() = req.start_pose.orientation.z;
-	via_points_quaternions.at(1).w() = req.start_pose.orientation.w;
-	via_points_quaternions.at(1) = via_points_quaternions.at(1) * adjust_block_orientation;
-	
-	via_points_positions.at(0) = via_points_positions.at(1) + Vector3d(0.0,0.0,Z_APPROACH);
-	via_points_quaternions.at(0) = via_points_quaternions.at(1);
-	
-	via_points_positions.at(2) = via_points_positions.at(0);
-	via_points_quaternions.at(2) = via_points_quaternions.at(0);
-	
-	via_points_positions.at(4) << req.end_pose.position.x, req.end_pose.position.y, req.end_pose.position.z + Z_GRIP;
-	via_points_quaternions.at(4).x() = req.end_pose.orientation.x;
-	via_points_quaternions.at(4).y() = req.end_pose.orientation.y;
-	via_points_quaternions.at(4).z() = req.end_pose.orientation.z;
-	via_points_quaternions.at(4).w() = req.end_pose.orientation.w;
-	via_points_quaternions.at(4) = via_points_quaternions.at(4) * adjust_block_orientation;
-	
-	via_points_positions.at(3) = via_points_positions.at(4) + Vector3d(0.0,0.0,Z_APPROACH);
-	via_points_quaternions.at(3) = via_points_quaternions.at(4);
-	
-	via_points_positions.at(5) = via_points_positions.at(3);
-	via_points_quaternions.at(5) = via_points_quaternions.at(3);
-	
-	
-	/* Send joints to robot*/
-	for (int i=0; i < VIA_POINS_NUMBER; ++i){
-		actual_joints = get_actual_joints();
-		joint_path = differential_inverse_kin_quaternions(actual_joints,via_points_positions.at(i),via_points_quaternions.at(i));
-		
-		for (int j=0; j < joint_path.rows(); ++j){
-			desired_joints[0] = joint_path(j,0);
-			desired_joints[1] = joint_path(j,1);
-			desired_joints[2] = joint_path(j,2);
-			desired_joints[3] = joint_path(j,3);
-			desired_joints[4] = joint_path(j,4);
-			desired_joints[5] = joint_path(j,5);
-			desired_joints[6] = joint_path(j,6);
-			desired_joints[7] = joint_path(j,7);
-		}
-		
-		move_robot_service.request.joints.data = desired_joints;
-		service_exit = robot_controller.call(move_robot_service);
-		if(!service_exit){
-				ROS_ERROR("%s Failed to call service move_robot", info_name);
-				return false;
-		}
-		if(!move_robot_service.response.success){
-				ROS_WARN("%s robot_controller failed to reach the target", info_name);
-				ROS_INFO("%s ...block \"%s\" ignored", info_name, req.start_pose.label.c_str());
-				res.success = false;
-				return true;
-		}
-	}
-	/* Sent */
-	
-	
-/*	desired_joints[0] = 0.0;
+	desired_joints[0] = 0.0;
 	desired_joints[1] = 0.0;
 	desired_joints[2] = 0.0;
 	desired_joints[3] = 0.0;
@@ -162,10 +65,10 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 	desired_joints[5] = 0.0;
 	desired_joints[6] = 0.0;
 	desired_joints[7] = 0.0;
-*/
 
 
-	/* Send joints to robot*
+
+	/* Send joints to robot*/
 	move_robot_service.request.joints.data = desired_joints;
 	service_exit = robot_controller.call(move_robot_service);
 	if(!service_exit){
@@ -180,7 +83,7 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 	}
 	/* Sent */
 
-/*        desired_joints[0] = 1.20;
+        desired_joints[0] = 1.20;
         //desired_joints[1] = -1.57;
 		desired_joints[1] = -0.8;
         desired_joints[2] = 1.9;
@@ -189,8 +92,8 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
         desired_joints[5] = 2.3;
         desired_joints[6] = 0.0;
         desired_joints[7] = 0.0;
-*/		
-/*		Eigen::Matrix4d directMatrix, directMatrixAdjusted;
+		
+		Eigen::Matrix4d directMatrix, directMatrixAdjusted;
 		Eigen::VectorXd myJointVariables(6);
 		myJointVariables << desired_joints[0],desired_joints[1],desired_joints[2],desired_joints[3],desired_joints[4],desired_joints[5];
 		directMatrix = directKin(myJointVariables);
@@ -225,8 +128,8 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 		Path ppp;
 		ppp = differential_inverse_kin_quaternions(joints,f_p,f_q);
 		std::cout << ppp << std::endl;
-*/
-	/* Send joints to robot*
+
+	/* Send joints to robot*/
         move_robot_service.request.joints.data = desired_joints;
         service_exit = robot_controller.call(move_robot_service);
         if(!service_exit){
@@ -241,12 +144,12 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
         }
 	/* Sent */
 	
-/*	std::cout << "AAAAAAAAAAAAAAAAAA" << std::endl;
+	std::cout << "AAAAAAAAAAAAAAAAAA" << std::endl;
 	std::cout << get_actual_joints() << std::endl;
 	std::cout << "AAAAAAAAAAAAAAAAAA" << std::endl;
-*/	
 	
-	/*aaaaaaaaaaaa*
+	
+	/*aaaaaaaaaaaa*/
 		for (int i=0; i < ppp.rows(); ++i){
 			desired_joints[0] = ppp(i,0);
 			desired_joints[1] = ppp(i,1);

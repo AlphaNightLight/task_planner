@@ -38,7 +38,7 @@ def get_bounding_boxes_handler(req):
   #plt.imshow(img_cv2)
   #plt.show()
 
-  predictions = make_prediction(path_to_image)
+  predictions = make_prediction(img_cv2)
 
   for prediction in predictions:
     bounding_box = BoundingBox()
