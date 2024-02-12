@@ -17,6 +17,7 @@
 #define Z_GRIP 0.15
 #define Z_APPROACH 0.10
 #define VIA_POINS_NUMBER 6
+#define GRIPPER_TYPE "soft_2"
 
 
 char info_name[] = " [ motion_planner ]:";
@@ -44,6 +45,16 @@ Vector8d get_actual_joints()
 	return actual_joints;
 }
 
+void set_gripper_joints(std::vector<double> &desired_joints, double diameter, std::string gripper_type)
+{
+	double opening_angle;
+	if (gripper_type == "soft_2") opening_angle = atan2( 0.5*(diameter - 0.04), 0.06);
+	else if (gripper_type == "robotiq_2") opening_angle = 0.85 - diameter * 0.85 / 85.0;
+	else opening_angle = (diameter - 0.022) * (0.13 - 0.022) * (-3.1415) + 3.1415;
+	desired_joints.at(JOINT_SIZE - 1) = opening_angle;
+	desired_joints.at(JOINT_SIZE - 2) = opening_angle;
+}
+
 bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::Response &res)
 {
 	req.start_pose.position.x = 0.7;
@@ -62,7 +73,7 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 	req.end_pose.orientation.y = 0.0;
 	req.end_pose.orientation.z = 0.3827;
 	req.end_pose.orientation.w = 0.9239;*/
-	req.end_pose.position.x = 0.8;
+	req.end_pose.position.x = 0.2;
 	req.end_pose.position.y = 0.4;
 	req.end_pose.position.z = 0.87;
 	req.end_pose.orientation.x = 0.0;
@@ -122,174 +133,127 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 	via_points_quaternions.at(5) = via_points_quaternions.at(3);
 	
 	
-	/* Send joints to robot*/
+	
 	for (int i=0; i < VIA_POINS_NUMBER; ++i){
 		actual_joints = get_actual_joints();
 		joint_path = differential_inverse_kin_quaternions(actual_joints,via_points_positions.at(i),via_points_quaternions.at(i));
 		
-		for (int j=0; j < joint_path.rows(); ++j){
-			desired_joints[0] = joint_path(j,0);
-			desired_joints[1] = joint_path(j,1);
-			desired_joints[2] = joint_path(j,2);
-			desired_joints[3] = joint_path(j,3);
-			desired_joints[4] = joint_path(j,4);
-			desired_joints[5] = joint_path(j,5);
-			desired_joints[6] = joint_path(j,6);
-			desired_joints[7] = joint_path(j,7);
-		}
-		
-		move_robot_service.request.joints.data = desired_joints;
-		service_exit = robot_controller.call(move_robot_service);
-		if(!service_exit){
+		/*for (int j=0; j < joint_path.rows(); ++j){
+			desired_joints.at(0) = joint_path(j,0);
+			desired_joints.at(1) = joint_path(j,1);
+			desired_joints.at(2) = joint_path(j,2);
+			desired_joints.at(3) = joint_path(j,3);
+			desired_joints.at(4) = joint_path(j,4);
+			desired_joints.at(5) = joint_path(j,5);
+			desired_joints.at(6) = joint_path(j,6);
+			desired_joints.at(7) = joint_path(j,7);
+			
+			move_robot_service.request.joints.data = desired_joints;
+			service_exit = robot_controller.call(move_robot_service);
+			if(!service_exit){
 				ROS_ERROR("%s Failed to call service move_robot", info_name);
 				return false;
-		}
-		if(!move_robot_service.response.success){
+			}
+			if(!move_robot_service.response.success){
 				ROS_WARN("%s robot_controller failed to reach the target", info_name);
 				ROS_INFO("%s ...block \"%s\" ignored", info_name, req.start_pose.label.c_str());
 				res.success = false;
 				return true;
-		}
-	}
-	/* Sent */
-	
-	
-/*	desired_joints[0] = 0.0;
-	desired_joints[1] = 0.0;
-	desired_joints[2] = 0.0;
-	desired_joints[3] = 0.0;
-	desired_joints[4] = 0.0;
-	desired_joints[5] = 0.0;
-	desired_joints[6] = 0.0;
-	desired_joints[7] = 0.0;
-*/
-
-
-	/* Send joints to robot*
-	move_robot_service.request.joints.data = desired_joints;
-	service_exit = robot_controller.call(move_robot_service);
-	if(!service_exit){
-		ROS_ERROR("%s Failed to call service move_robot", info_name);
-		return false;
-	}
-	if(!move_robot_service.response.success){
-		ROS_WARN("%s robot_controller failed to reach the target", info_name);
-		ROS_INFO("%s ...block \"%s\" ignored", info_name, req.start_pose.label.c_str());
-		res.success = false;
-		return true;
-	}
-	/* Sent */
-
-/*        desired_joints[0] = 1.20;
-        //desired_joints[1] = -1.57;
-		desired_joints[1] = -0.8;
-        desired_joints[2] = 1.9;
-        desired_joints[3] = -0.05;
-        desired_joints[4] = 0.1;
-        desired_joints[5] = 2.3;
-        desired_joints[6] = 0.0;
-        desired_joints[7] = 0.0;
-*/		
-/*		Eigen::Matrix4d directMatrix, directMatrixAdjusted;
-		Eigen::VectorXd myJointVariables(6);
-		myJointVariables << desired_joints[0],desired_joints[1],desired_joints[2],desired_joints[3],desired_joints[4],desired_joints[5];
-		directMatrix = directKin(myJointVariables);
-		directMatrixAdjusted = base_to_world() * directMatrix * adjust_gripper();
+			}
+		}*/
 		
-		ROS_INFO("FEDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-		std::cout << directMatrix << std::endl;
+		int last_joint = joint_path.rows() - 1;
+		desired_joints.at(0) = joint_path(last_joint,0);
+		desired_joints.at(1) = joint_path(last_joint,1);
+		desired_joints.at(2) = joint_path(last_joint,2);
+		desired_joints.at(3) = joint_path(last_joint,3);
+		desired_joints.at(4) = joint_path(last_joint,4);
+		desired_joints.at(5) = joint_path(last_joint,5);
+		desired_joints.at(6) = joint_path(last_joint,6);
+		desired_joints.at(7) = joint_path(last_joint,7);
 		
-		Matrix3d directMatrixTRE = directMatrix.block<3,3>(0,0);
-		Quaterniond directMatrixQ(directMatrixTRE);
-		std::cout << directMatrixQ.coeffs() << std::endl;
-		ROS_INFO("FEDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-		std::cout << directMatrixAdjusted << std::endl;
-		
-		Matrix3d directMatrixAdjustedTRE = directMatrixAdjusted.block<3,3>(0,0);
-		Quaterniond directMatrixAdjustedQ(directMatrixAdjustedTRE);
-		//std::cout << directMatrixAdjustedQ.coeffs() << std::endl;
-		std::cout << "x " << directMatrixAdjustedQ.x() << std::endl;
-		std::cout << "y " << directMatrixAdjustedQ.y() << std::endl;
-		std::cout << "z " << directMatrixAdjustedQ.z() << std::endl;
-		std::cout << "w " << directMatrixAdjustedQ.w() << std::endl;
-		ROS_INFO("FEDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-		
-		Vector8d joints;
-		joints << desired_joints[0], desired_joints[1], desired_joints[2], desired_joints[3], desired_joints[4], desired_joints[5], desired_joints[6], desired_joints[7];
-		Vector3d i_p = directMatrixAdjusted.block<3,1>(0,3);
-		Vector3d f_p;
-		f_p << 0.73, 0.74, 1.26;//-0.0001, -0.00016, -0.00006, -0.00014, -0.00004, 0.00001;
-		Quaterniond i_q = directMatrixAdjustedQ;
-		Quaterniond f_q(1.0, 0.0, 0.0, 0.0);
-		
-		Path ppp;
-		ppp = differential_inverse_kin_quaternions(joints,f_p,f_q);
-		std::cout << ppp << std::endl;
-*/
-	/* Send joints to robot*
-        move_robot_service.request.joints.data = desired_joints;
-        service_exit = robot_controller.call(move_robot_service);
-        if(!service_exit){
-                ROS_ERROR("%s Failed to call service move_robot", info_name);
-                return false;
-        }
-        if(!move_robot_service.response.success){
-                ROS_WARN("%s robot_controller failed to reach the target", info_name);
-                ROS_INFO("%s ...block \"%s\" ignored", info_name, req.start_pose.label.c_str());
-                res.success = false;
-                return true;
-        }
-	/* Sent */
-	
-/*	std::cout << "AAAAAAAAAAAAAAAAAA" << std::endl;
-	std::cout << get_actual_joints() << std::endl;
-	std::cout << "AAAAAAAAAAAAAAAAAA" << std::endl;
-*/	
-	
-	/*aaaaaaaaaaaa*
-		for (int i=0; i < ppp.rows(); ++i){
-			desired_joints[0] = ppp(i,0);
-			desired_joints[1] = ppp(i,1);
-			desired_joints[2] = ppp(i,2);
-			desired_joints[3] = ppp(i,3);
-			desired_joints[4] = ppp(i,4);
-			desired_joints[5] = ppp(i,5);
-			desired_joints[6] = ppp(i,6);
-			desired_joints[7] = ppp(i,7);
-		}
-		
+		/* Send joints to robot*/
 		move_robot_service.request.joints.data = desired_joints;
-        service_exit = robot_controller.call(move_robot_service);
-        if(!service_exit){
-                ROS_ERROR("%s Failed to call service move_robot", info_name);
-                return false;
-        }
-        if(!move_robot_service.response.success){
-                ROS_WARN("%s robot_controller failed to reach the target", info_name);
-                ROS_INFO("%s ...block \"%s\" ignored", info_name, req.start_pose.label.c_str());
-                res.success = false;
-                return true;
-        }
-	/*aaaaaaaaaaaa*/
-
-
+		service_exit = robot_controller.call(move_robot_service);
+		if(!service_exit){
+			ROS_ERROR("%s Failed to call service move_robot", info_name);
+			return false;
+		}
+		if(!move_robot_service.response.success){
+			ROS_WARN("%s robot_controller failed to reach the target", info_name);
+			ROS_INFO("%s ...block \"%s\" ignored", info_name, req.start_pose.label.c_str());
+			res.success = false;
+			return true;
+		}
+		/* Sent */
+		
+		bool girpper_change = false;
+		if (i == 1) {
+			if (req.start_pose.label == "X2-Y2-Z2" || req.start_pose.label == "X2-Y2-Z2-FILLET") {
+				set_gripper_joints(desired_joints, 0.15, GRIPPER_TYPE);
+			} else {
+				set_gripper_joints(desired_joints, 0.02, GRIPPER_TYPE);
+			}
+			girpper_change = true;
+		} else if (i == 4) {
+			set_gripper_joints(desired_joints, 0.3, GRIPPER_TYPE);
+			girpper_change = true;
+		}
+		
+		if (girpper_change == true) {
+			/* Send joints to robot*/
+			move_robot_service.request.joints.data = desired_joints;
+			service_exit = robot_controller.call(move_robot_service);
+			if(!service_exit){
+				ROS_ERROR("%s Failed to call service move_robot", info_name);
+				return false;
+			}
+			if(!move_robot_service.response.success){
+				ROS_WARN("%s robot_controller failed to reach the target", info_name);
+				ROS_INFO("%s ...block \"%s\" ignored", info_name, req.start_pose.label.c_str());
+				res.success = false;
+				return true;
+			}
+			/* Sent */
+		}
+	}
+	
 	ROS_INFO("%s ...block \"%s\" moved!", info_name, req.start_pose.label.c_str());
 	res.success = true;
 	return true;
 }
 
 
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "motion_planner");
 	ros::NodeHandle node;
-	
-	bool ok = almostZero(0.002);
 
 	ROS_INFO("%s Waiting for robot_controller", info_name);
 	robot_controller = node.serviceClient<ur5_lego::MoveRobot>("move_robot");
 	robot_controller.waitForExistence();
-
+	
+	ROS_INFO("%s moving robot to new homing", info_name);
+	ur5_lego::MoveRobot move_robot_homing;
+	bool service_exit;
+	// std::vector<double> desired_joints{-0.32, -0.78, -2.56, -1.63, -1.57, 3.49, 1, 1};
+	std::vector<double> desired_joints{-0.32, -0.38, -2.76, -1.63, -3.14, 3.49, 0.0, 0.0};
+	set_gripper_joints(desired_joints, 0.3, GRIPPER_TYPE);
+	
+	
+	/* Send joints to robot*/
+	move_robot_homing.request.joints.data = desired_joints;
+	service_exit = robot_controller.call(move_robot_homing);
+	if(!service_exit){
+		ROS_ERROR("%s Failed to call service move_robot", info_name);
+		return false;
+	}
+	if(!move_robot_homing.response.success){
+		ROS_WARN("%s robot_controller failed to reach the new homing...", info_name);
+	}
+	/* Sent */
+	
 	ros::ServiceServer service = node.advertiseService("move_block", move_block_handler);
 	ros::param::get("/debug_mode", debug_mode);
 	ros::param::get("/joint_size", JOINT_SIZE);
