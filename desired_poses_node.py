@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+@file desired_poses_node.py
+@brief Ros node that exposes a get_desired_poses service of type ur5_lego.srv.GetDesiredPoses
+It simply imports the desired_poses_params module that defines the desired position and orientation of blocks, and sents them to the caller.
+@date   04/01/2024
+@author Alex Pegoraro
+"""
 
 import rospy as ros
 
@@ -17,6 +24,11 @@ debug_mode = False
 
 
 def get_desired_poses_handler(req):
+  """! handler of get_desired_poses service, type ur5_lego.srv.GetDesiredPoses
+  It adjusts the values imported from desired_poses_params.py to convert them from table frame to world frame, and then returns them to the caller.
+  @param req: empty
+  @return res: the list of desired poses
+  """
   ros.loginfo("%s desired_poses_node contacted", info_name)
   res = GetDesiredPosesResponse()
 

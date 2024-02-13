@@ -1,3 +1,12 @@
+/*!
+    @file   motion_planner.cpp
+    @brief  Ros node that exposes a move_block service of type ur5_lego::MoveBlock.
+	Through the aid of the motion_planner_ur5 submodule and the robot_controller node,
+	it moves the robot to grip a block in an initial pose and put it in a final one.
+    @date   04/01/2024
+    @author Alex Pegoraro
+*/
+
 #include "ros/ros.h"
 
 #include "ur5_lego/MoveBlock.h"
@@ -27,6 +36,11 @@ ros::ServiceClient robot_controller;
 
 
 
+/*!
+    @brief a function to retrieve the actual joint configuration of the robot.
+	@details It reads the /ur5/joint_states topic by ur5_generic.py
+    @return a Vector8d containing the actual joint state of the robot.
+*/
 Vector8d get_actual_joints()
 {
 	Vector8d actual_joints;
@@ -45,6 +59,14 @@ Vector8d get_actual_joints()
 	return actual_joints;
 }
 
+
+
+/*!
+    @brief given a joint state, it modifies the gripper joints to have a desire diameter
+    @param[in] double diameter: the desired gripper diameter, std::string gripper_type: the kind of gripper used.
+	@param[out] std::vector<double> &desired_joints: the joints with the gripper adjusted to have the desired diameter.
+    @return void
+*/
 void set_gripper_joints(std::vector<double> &desired_joints, double diameter, std::string gripper_type)
 {
 	double opening_angle;
@@ -55,32 +77,18 @@ void set_gripper_joints(std::vector<double> &desired_joints, double diameter, st
 	desired_joints.at(JOINT_SIZE - 2) = opening_angle;
 }
 
+
+
+/*!
+    @brief handler of move_robot service, type ur5_lego::MoveBlock.
+    @details It calcultaes the necessary via points and uses them to design a path to grip the block.
+	The joints necessary to accomplish such a path are then sent to robot_controller node.
+    @param[in] ur5_lego::MoveBlock::Request &req: the block actual position and the block desired one.
+	@param[out] ur5_lego::MoveBlock::Response &res: true if success, false if something went wrong.
+    @return True if success, false if something went wrong.
+*/
 bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::Response &res)
 {
-	req.start_pose.position.x = 0.7;
-	req.start_pose.position.y = 0.5;
-	req.start_pose.position.z = 0.87;
-	req.start_pose.orientation.x = 0.0;
-	req.start_pose.orientation.y = 0.0;
-	req.start_pose.orientation.z = 0.7071;
-	req.start_pose.orientation.w = 0.7071;
-	
-	
-	/*req.end_pose.position.x = 0.6;
-	req.end_pose.position.y = 0.6;
-	req.end_pose.position.z = 0.87;
-	req.end_pose.orientation.x = 0.0;
-	req.end_pose.orientation.y = 0.0;
-	req.end_pose.orientation.z = 0.3827;
-	req.end_pose.orientation.w = 0.9239;*/
-	req.end_pose.position.x = 0.2;
-	req.end_pose.position.y = 0.4;
-	req.end_pose.position.z = 0.87;
-	req.end_pose.orientation.x = 0.0;
-	req.end_pose.orientation.y = 0.0;
-	req.end_pose.orientation.z = -0.3827;
-	req.end_pose.orientation.w = 0.9239;
-	
 	bool service_exit;
 	ur5_lego::MoveRobot move_robot_service;
 	
@@ -138,6 +146,7 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 		actual_joints = get_actual_joints();
 		joint_path = differential_inverse_kin_quaternions(actual_joints,via_points_positions.at(i),via_points_quaternions.at(i));
 		
+		/* Alternative completley in operational space, however it is less smooth */
 		/*for (int j=0; j < joint_path.rows(); ++j){
 			desired_joints.at(0) = joint_path(j,0);
 			desired_joints.at(1) = joint_path(j,1);
@@ -225,6 +234,12 @@ bool move_block_handler(ur5_lego::MoveBlock::Request &req, ur5_lego::MoveBlock::
 
 
 
+/*!
+    @brief Main code of motion_planner.
+    @details It moves the robot into an homing postion, then advertises a move_block service of type ur5_lego::MoveBlock, with handles move_block_handler().
+    @param[in] int argc, char **argv: classical command line arguments.
+    @return 0 if successful, 1 if something went wrong.
+*/
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "motion_planner");
@@ -238,7 +253,7 @@ int main(int argc, char **argv)
 	ur5_lego::MoveRobot move_robot_homing;
 	bool service_exit;
 	// std::vector<double> desired_joints{-0.32, -0.78, -2.56, -1.63, -1.57, 3.49, 1, 1};
-	std::vector<double> desired_joints{-0.32, -0.38, -2.76, -1.63, -3.14, 3.49, 0.0, 0.0};
+	std::vector<double> desired_joints{-0.32, -0.58, -2.76, -1.63, -3.14, 3.49, 0.0, 0.0};
 	set_gripper_joints(desired_joints, 0.3, GRIPPER_TYPE);
 	
 	

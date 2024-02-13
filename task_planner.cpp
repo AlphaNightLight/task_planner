@@ -1,3 +1,15 @@
+/*!
+    @file   task_planner.cpp
+    @brief  The master of all the project, and the entry point of the workflow.
+	It invokes services from all the other nodes in the following order:
+	1) vision_node detects the bounding boxes.
+	2) pointcloud_node uses such information to estimate the blocks' poses.
+	3) desired_poses_node provides the target pose for each block.
+	4) motion_planner recieves detected and desired pose for each block and moves it.
+    @date   04/01/2024
+    @author Alex Pegoraro
+*/
+
 #include "ros/ros.h"
 
 #include "ur5_lego/GetBoundingBoxes.h"
@@ -15,6 +27,14 @@ char info_name[] = " [  task_planner  ]:";
 bool debug_mode = false;
 
 
+
+/*!
+    @brief The entry code of all the project. It calls everything else.
+    @details It calls the following nodes: vision_node for bounding boxes, pointcloud_node to convert them into actual poses,
+	desired_poses_node to retrive desired block poses, motion_planner to actually move the block.
+    @param[in] int argc, char **argv: classical command line arguments.
+    @return 0 if successful, 1 if something went wrong.
+*/
 int main(int argc, char **argv)
 {
 	/// Initialization
@@ -99,7 +119,7 @@ int main(int argc, char **argv)
 
 	if(debug_mode) ROS_INFO("%s Motion planning phase", info_name);
 
-	actual_poses.push_back(ur5_lego::TargetPose());
+	/**actual_poses.push_back(ur5_lego::TargetPose());
 	actual_poses.at(0).label = "X1-Y1-Z2";
 	actual_poses.at(0).position.x = 0.6;
 	actual_poses.at(0).position.y = 0.6;

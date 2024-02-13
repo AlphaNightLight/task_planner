@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+@file vision_node.py
+@brief Ros node that exposes a get_bounding_boxes service of type ur5_lego.srv.GetBoundingBoxes
+It uses a YOLOv8 model from mega_blocks_detector_project submodule to extract the bounding boxes from the camera image.
+@date   04/01/2024
+@author Alex Pegoraro
+"""
 
 import rospy as ros
 
@@ -9,14 +16,12 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 import os
-#import matplotlib.pyplot as plt
 
 
 cwd = os.getcwd()
 os.chdir("/home/alex/ros_ws/src/ur5_lego/src/mega_blocks_detector_project/")
 from ur5_lego_modules.bosco_code import bb, make_prediction
 os.chdir(cwd)
-#print(ur5_lego_modules.bosco_code.__file__)
 
 
 
@@ -27,6 +32,11 @@ path_to_image = "/home/alex/ros_ws/src/ur5_lego/img/zed.jpg"
 
 
 def get_bounding_boxes_handler(req):
+  """! handler of get_bounding_boxes service, type ur5_lego.srv.GetBoundingBoxes
+  It reads the image from the camera and calls the make_prediction() function on it to detect the bounding boxes.
+  @param req: empty
+  @return res: the list of bounding boxes
+  """
   ros.loginfo("%s Detecting bounding boxes...", info_name)
   res = GetBoundingBoxesResponse()
 
@@ -34,9 +44,6 @@ def get_bounding_boxes_handler(req):
   img_raw = ros.wait_for_message("/ur5/zed_node/left/image_rect_color", Image)
   img_cv2 = CvBridge().imgmsg_to_cv2(img_raw, 'rgb8')
   cv2.imwrite(path_to_image, img_cv2)
-
-  #plt.imshow(img_cv2)
-  #plt.show()
 
   predictions = make_prediction(img_cv2)
 

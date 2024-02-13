@@ -1,3 +1,12 @@
+/*!
+    @file   robot_controller.cpp
+    @brief  Ros node that exposes a move_robot service of type ur5_lego::MoveRobot.
+	It recieves a vector of 8 joints, and moves the robot to that configuration from whatever pose it is now sending a message
+	on the /ur5/joint_group_pos_controller/command topic of ur5_generic.py
+    @date   04/01/2024
+    @author Alex Pegoraro
+*/
+
 #include "ros/ros.h"
 #include "ros/master.h"
 
@@ -16,6 +25,15 @@ double MAX_INCREMENT; // the upper bound for angular velocity can be directly co
 ros::Publisher joint_group_pos_controller_publisher;
 
 
+
+/*!
+    @brief handler of move_robot service, type ur5_lego::MoveRobot.
+    @details It retrieves the actual joint state of the robot and interpolates it with the desired one.
+	All the intermediate joints are sent to the robot, causing the motion.
+    @param[in] ur5_lego::MoveRobot::Request &req: the desired joint configuration.
+	@param[out] ur5_lego::MoveRobot::Response &res: true if success, false if something went wrong.
+    @return True if success, false if something went wrong.
+*/
 bool move_robot_handler(ur5_lego::MoveRobot::Request &req, ur5_lego::MoveRobot::Response &res)
 {
 	ROS_INFO("%s The robot is moving...", info_name);
@@ -80,6 +98,13 @@ bool move_robot_handler(ur5_lego::MoveRobot::Request &req, ur5_lego::MoveRobot::
 }
 
 
+
+/*!
+    @brief Main code of robot_controller.
+    @details It waits for ur5_generic.py, then advertises a move_robot service of type ur5_lego::MoveRobot, with handler move_robot_handler().
+    @param[in] int argc, char **argv: classical command line arguments.
+    @return 0 if successful, 1 if something went wrong.
+*/
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "robot_controller");

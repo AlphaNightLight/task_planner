@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on 3 May  2022
+Version Crafted by Alex Pegoraro to adapt it to adapt it to ur5_lego project.
 
 @author: mfocchi
 """
